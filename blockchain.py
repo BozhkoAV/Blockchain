@@ -4,6 +4,7 @@ import hashlib
 import json
 import math
 
+
 class Blockchain:
     def __init__(self, node_index):
         self.chain = []
@@ -24,9 +25,8 @@ class Blockchain:
         self.chain.append(block)
         print("Genesis created:")
         print(json.dumps(block, indent=4))
-        print()
 
-    def add_block(self):
+    def create_block(self):
         if len(self.chain) > 0:
             prev_block = self.chain[-1]
 
@@ -41,10 +41,7 @@ class Blockchain:
             while not (get_hash(new_block)):
                 new_block["nonce"] = self.change_nonce(new_block["nonce"])
 
-            print(f'Node {self.node_index} created block {new_block["index"]}:')
-            print(json.dumps(new_block, indent=4))
-            print()
-            self.chain.append(new_block)
+            return new_block
 
     def change_nonce(self, nonce):
         if self.node_index % 3 == 1:
@@ -62,6 +59,10 @@ class Blockchain:
                     return random.randint(0, 1000000)
 
         return nonce + 1
+
+    def add_block(self, block):
+        if len(self.chain) >= 0:
+            self.chain.append(block)
 
 
 def get_hash(block):
