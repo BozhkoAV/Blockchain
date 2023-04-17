@@ -1,5 +1,7 @@
 import sys
 import socket
+from blockchain import Blockchain
+import json
 
 
 def create_listening_socket(node_index):
@@ -108,3 +110,21 @@ if __name__ == '__main__':
         while len(conn_to_our_listening_socket) < 2:
             conn, _ = node_listening_socket.accept()
             conn_to_our_listening_socket.append(conn)
+
+    # создание цепи для ноды
+    bc = Blockchain(node_index=node_id)
+
+    if node_id == 1:
+        print("Node 1 generated genesis")
+        bc.add_genesis()
+        # Нода 1 посылает генезис остальным нодам
+        for conn in conn_to_our_listening_socket:
+            conn.sendall(bytes(json.dumps(bc.chain[0]), encoding="utf-8"))
+
+    if node_id == 2 or node_id == 3:
+        print(f"Node {node_id} received genesis from Node 1")
+        # Нода 2 и 3 получают генезис по сокетам подключённым к слушающему порту ноды 1
+        node_1_genesis = conn_to_another_nodes_listening_sockets[0].recv(4096)
+        genesis_str = "".join(node_1_genesis.decode("utf-8"))
+        bc.add_block(json.loads(genesis_str))
+        print(bc.chain)
