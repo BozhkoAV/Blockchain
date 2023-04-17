@@ -25,7 +25,6 @@ class Blockchain:
         self.chain.append(block)
         print("Genesis created:")
         print(json.dumps(block, indent=4))
-        print()
 
     def create_block(self):
         if len(self.chain) > 0:
@@ -42,9 +41,6 @@ class Blockchain:
             while not (get_hash(new_block)):
                 new_block["nonce"] = self.change_nonce(new_block["nonce"])
 
-            print(f'Node {self.node_index} created block {new_block["index"]}:')
-            print(json.dumps(new_block, indent=4))
-            print()
             return new_block
 
     def change_nonce(self, nonce):

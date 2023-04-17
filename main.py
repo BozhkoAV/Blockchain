@@ -2,6 +2,7 @@ import sys
 import socket
 from blockchain import Blockchain
 import json
+import time
 
 
 def create_listening_socket(node_index):
@@ -127,4 +128,86 @@ if __name__ == '__main__':
         node_1_genesis = conn_to_another_nodes_listening_sockets[0].recv(4096)
         genesis_str = "".join(node_1_genesis.decode("utf-8"))
         bc.add_block(json.loads(genesis_str))
-        print(bc.chain)
+
+    while True:
+        new_block = bc.create_block()
+        block_generation_time = time.time()
+
+        # значения времени, когда новый блок был сгенерирован нодами 2 и 3, передаются ноде 1
+        if node_id == 2 or node_id == 3:
+            # ноды 2 и 3 отправляют значения времени на слушающий сокет ноды 1
+            conn_to_another_nodes_listening_sockets[0].\
+                sendall(bytes(f"{node_id} {block_generation_time}", encoding="utf-8"))
+
+        node_winner_id = 0
+        if node_id == 1:
+            nodes_time = []
+            # нода 1 получает на слушающий сокет значения времени нод 2 и 3
+            for conn in conn_to_our_listening_socket:
+                node_time = conn.recv(4096)
+                node_time_str = "".join(node_time.decode("utf-8"))
+                nodes_time.append(node_time_str.replace("\"", ""))
+
+            # нода 1 определяет блок какой ноды был сгенерирован раньше
+            node_winner_id = 1
+            for node_id_and_time in nodes_time:
+                i = int(node_id_and_time.split(" ")[0])
+                node_i_time = float(node_id_and_time.split(" ")[1])
+                if node_i_time < block_generation_time:
+                    block_generation_time = node_i_time
+                    node_winner_id = i
+
+            # нода 1 отправляет нодам 2 и 3 номер победившей ноды
+            for conn in conn_to_our_listening_socket:
+                conn.sendall(bytes(str(node_winner_id), encoding="utf-8"))
+
+        # ноды 2 и 3 получают от ноды 1 номер победившей ноды
+        if node_id == 2 or node_id == 3:
+            node_winner_id_from_node_1 = conn_to_another_nodes_listening_sockets[0].recv(4096)
+            node_winner_id = int("".join(node_winner_id_from_node_1.decode("utf-8")))
+
+        # если нода 1 сгенерировала блок раньше всех
+        if node_winner_id == 1:
+            if node_id == 1:
+                print(f'Node 1 created block {new_block["index"]}:')
+                print(json.dumps(new_block, indent=4))
+                for conn in conn_to_our_listening_socket:
+                    conn.sendall(bytes(json.dumps(new_block), encoding="utf-8"))
+            if node_id == 2 or node_id == 3:
+                node_1_block = conn_to_another_nodes_listening_sockets[0].recv(4096)
+                block_str = "".join(node_1_block.decode("utf-8"))
+                new_block = json.loads(block_str)
+                print(f'Node {node_id} received block {new_block["index"]} from Node 1')
+
+        # если нода 2 сгенерировала блок раньше всех
+        if node_winner_id == 2:
+            if node_id == 1:
+                node_2_block = conn_to_another_nodes_listening_sockets[0].recv(4096)
+                block_str = "".join(node_2_block.decode("utf-8"))
+                new_block = json.loads(block_str)
+                print(f'Node 1 received block {new_block["index"]} from Node 2')
+            if node_id == 2:
+                print(f'Node 2 created block {new_block["index"]}:')
+                print(json.dumps(new_block, indent=4))
+                for conn in conn_to_our_listening_socket:
+                    conn.sendall(bytes(json.dumps(new_block), encoding="utf-8"))
+            if node_id == 3:
+                node_2_block = conn_to_another_nodes_listening_sockets[1].recv(4096)
+                block_str = "".join(node_2_block.decode("utf-8"))
+                new_block = json.loads(block_str)
+                print(f'Node 3 received block {new_block["index"]} from Node 2')
+
+        # если нода 3 сгенерировала блок раньше всех
+        if node_winner_id == 3:
+            if node_id == 1 or node_id == 2:
+                node_3_block = conn_to_another_nodes_listening_sockets[1].recv(4096)
+                block_str = "".join(node_3_block.decode("utf-8"))
+                new_block = json.loads(block_str)
+                print(f'Node {node_id} received block {new_block["index"]} from Node 3')
+            if node_id == 3:
+                print(f'Node 2 created block {new_block["index"]}:')
+                print(json.dumps(new_block, indent=4))
+                for conn in conn_to_our_listening_socket:
+                    conn.sendall(bytes(json.dumps(new_block), encoding="utf-8"))
+
+        bc.add_block(new_block)
