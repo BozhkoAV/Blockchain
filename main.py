@@ -11,3 +11,4 @@ if __name__ == '__main__':
 
     bc = Blockchain(node_index=node_id)
     bc.add_genesis()
+    bc.add_block()
