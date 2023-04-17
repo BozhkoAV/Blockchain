@@ -2,7 +2,7 @@ import random
 import string
 import hashlib
 import json
-
+import math
 
 class Blockchain:
     def __init__(self, node_index):
@@ -39,12 +39,29 @@ class Blockchain:
             }
 
             while not (get_hash(new_block)):
-                new_block["nonce"] += 1
+                new_block["nonce"] = self.change_nonce(new_block["nonce"])
 
             print(f'Node {self.node_index} created block {new_block["index"]}:')
             print(json.dumps(new_block, indent=4))
             print()
             self.chain.append(new_block)
+
+    def change_nonce(self, nonce):
+        if self.node_index % 3 == 1:
+            return random.randint(0, 1000000)
+
+        if self.node_index % 3 == 2:
+            if nonce < 2:
+                return nonce + 1
+            else:
+                prev_fib = round(nonce / ((1 + math.sqrt(5)) / 2.0))
+                new_fib = prev_fib + nonce
+                if new_fib < 1000000:
+                    return new_fib
+                else:
+                    return random.randint(0, 1000000)
+
+        return nonce + 1
 
 
 def get_hash(block):
