@@ -28,5 +28,83 @@ if __name__ == '__main__':
         else:
             break
 
-    # создание слушающего сокета
-    node_listening_socket = create_listening_socket(node_index=node_id)
+    # список сокетов, подключенных к слушающему сокету этой ноды
+    conn_to_our_listening_socket = []
+    # список сокетов, используемых этой нодой для подключения к слушающим сокетам других нод
+    conn_to_another_nodes_listening_sockets = []
+
+    if node_id == 1:
+        # создание слушающего сокета для первой ноды
+        node_listening_socket = create_listening_socket(node_index=1)
+        # подключение двух сокетов других нод к слушающему сокету первой ноды
+        while len(conn_to_our_listening_socket) < 2:
+            conn, _ = node_listening_socket.accept()
+            conn_to_our_listening_socket.append(conn)
+
+        # подключение к слушающему сокету второй ноды
+        node_2_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        while True:
+            try:
+                node_2_socket.connect(('127.0.0.1', 10002))
+                conn_to_another_nodes_listening_sockets.append(node_2_socket)
+                break
+            except ConnectionRefusedError:
+                continue
+
+        # подключение к слушающему сокету третьей ноды
+        node_3_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        while True:
+            try:
+                node_3_socket.connect(('127.0.0.1', 10003))
+                conn_to_another_nodes_listening_sockets.append(node_3_socket)
+                break
+            except ConnectionRefusedError:
+                continue
+
+    if node_id == 2:
+        node_1_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        while True:
+            try:
+                node_1_socket.connect(('127.0.0.1', 10001))
+                conn_to_another_nodes_listening_sockets.append(node_1_socket)
+                break
+            except ConnectionRefusedError:
+                continue
+
+        node_listening_socket = create_listening_socket(node_index=2)
+        while len(conn_to_our_listening_socket) < 2:
+            conn, _ = node_listening_socket.accept()
+            conn_to_our_listening_socket.append(conn)
+
+        node_3_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        while True:
+            try:
+                node_3_socket.connect(('127.0.0.1', 10003))
+                conn_to_another_nodes_listening_sockets.append(node_3_socket)
+                break
+            except ConnectionRefusedError:
+                continue
+
+    if node_id == 3:
+        node_1_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        while True:
+            try:
+                node_1_socket.connect(('127.0.0.1', 10001))
+                conn_to_another_nodes_listening_sockets.append(node_1_socket)
+                break
+            except ConnectionRefusedError:
+                continue
+
+        node_2_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        while True:
+            try:
+                node_2_socket.connect(('127.0.0.1', 10002))
+                conn_to_another_nodes_listening_sockets.append(node_2_socket)
+                break
+            except ConnectionRefusedError:
+                continue
+
+        node_listening_socket = create_listening_socket(node_index=3)
+        while len(conn_to_our_listening_socket) < 2:
+            conn, _ = node_listening_socket.accept()
+            conn_to_our_listening_socket.append(conn)
