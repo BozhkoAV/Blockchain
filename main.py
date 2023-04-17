@@ -205,7 +205,7 @@ if __name__ == '__main__':
                 new_block = json.loads(block_str)
                 print(f'Node {node_id} received block {new_block["index"]} from Node 3')
             if node_id == 3:
-                print(f'Node 2 created block {new_block["index"]}:')
+                print(f'Node 3 created block {new_block["index"]}:')
                 print(json.dumps(new_block, indent=4))
                 for conn in conn_to_our_listening_socket:
                     conn.sendall(bytes(json.dumps(new_block), encoding="utf-8"))
