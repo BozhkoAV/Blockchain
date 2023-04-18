@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  node1:
+    image: blockchain
+    container_name: node1
+    network_mode: host
+    command: "1"
+    stdin_open: true
+    tty: true
+
+  node2:
+    image: blockchain
+    container_name: node2
+    network_mode: host
+    command: "2"
+    stdin_open: true
+    tty: true
+
+  node3:
+    image: blockchain
+    container_name: node3
+    network_mode: host
+    command: "3"
+    stdin_open: true
+    tty: true
